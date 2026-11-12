@@ -49,9 +49,15 @@
     .order-details { display:grid; grid-template-columns:1fr 1fr; gap:5px 18px; margin:13px 0 0; color:#515c53; font-size:.85rem; }
     .order-details strong { color:#323e35; }
     .address { grid-column:1/-1; overflow-wrap:anywhere; }
-    .order-actions { min-width:155px; display:flex; flex-direction:column; align-items:stretch; gap:8px; }
+    .order-actions { min-width:200px; display:flex; flex-direction:column; align-items:stretch; gap:8px; }
     .total { color:var(--green); font-size:1.16rem; font-weight:900; text-align:right; }
     .status { min-height:40px; border:1px solid #dfe4dc; border-radius:9px; padding:7px 9px; color:var(--ink); background:#fff; }
+    .status-buttons { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .status-button { min-height:40px; border:0; border-radius:9px; padding:7px 9px; color:#fff; font-size:.8rem; font-weight:800; cursor:pointer; }
+    .status-button:disabled { opacity:.65; cursor:wait; }
+    .status-confirm { background:var(--green); }
+    .status-cancel { background:var(--red); }
+    .status-feedback { min-height:1.4em; color:var(--green); font-size:.78rem; }
     .empty { padding:36px 15px; border:1px dashed #cfd8ce; border-radius:15px; color:var(--muted); text-align:center; }
     .error-page { max-width:600px; margin:45px auto; text-align:center; }
     [hidden] { display:none !important; }
@@ -69,6 +75,7 @@
       .address { grid-column:auto; }
       .order-actions { display:grid; grid-template-columns:1fr 1.2fr; align-items:center; }
       .total { text-align:left; }
+      .status, .status-buttons, .status-feedback { grid-column:1/-1; }
     }
   </style>
 </head>
@@ -97,7 +104,7 @@
 
     <section id="orders-panel" hidden>
       <div class="heading">
-        <div><span class="eyebrow">অর্ডার ইনবক্স</span><h1>গ্রাহকের অর্ডার</h1><p>নতুন অর্ডারগুলো এখানে আসবে। প্রয়োজনে status পরিবর্তন করুন।</p></div>
+        <div><span class="eyebrow">অর্ডার ইনবক্স</span><h1>গ্রাহকের অর্ডার</h1><p>অর্ডার নিশ্চিত বা বাতিল করুন; অন্যান্য status নিচের তালিকা থেকে বদলান।</p></div>
         <button class="button" id="refresh" type="button">রিফ্রেশ</button>
       </div>
       <div class="toolbar">
@@ -163,6 +170,31 @@
         parent.append(line);
       }
 
+      async function updateOrderStatus(order, nextStatus, statusSelect, controls, feedback) {
+        const previous = order.status;
+        controls.forEach(control => { control.disabled = true; });
+        feedback.textContent = "";
+        try {
+          await request(`/api/admin/orders/${encodeURIComponent(order.id)}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: nextStatus })
+          });
+          order.status = nextStatus;
+          statusSelect.value = nextStatus;
+          feedback.textContent = nextStatus === "নিশ্চিত"
+            ? "অর্ডারটি নিশ্চিত করা হয়েছে।"
+            : nextStatus === "বাতিল"
+              ? "অর্ডারটি বাতিল করা হয়েছে।"
+              : `স্ট্যাটাস আপডেট হয়েছে: ${nextStatus}`;
+        } catch (error) {
+          statusSelect.value = previous;
+          showMessage(ordersMessage, error.message);
+        } finally {
+          controls.forEach(control => { control.disabled = false; });
+        }
+      }
+
       function renderOrders() {
         const query = searchInput.value.trim().toLocaleLowerCase();
         const visibleOrders = allOrders.filter(order =>
@@ -219,24 +251,33 @@
             option.selected = value === order.status;
             status.append(option);
           }
-          status.addEventListener("change", async () => {
-            const previous = order.status;
-            status.disabled = true;
-            try {
-              await request(`/api/admin/orders/${encodeURIComponent(order.id)}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ status: status.value })
-              });
-              order.status = status.value;
-            } catch (error) {
-              status.value = previous;
-              showMessage(ordersMessage, error.message);
-            } finally {
-              status.disabled = false;
-            }
+          const confirmButton = document.createElement("button");
+          confirmButton.className = "status-button status-confirm";
+          confirmButton.type = "button";
+          confirmButton.textContent = "নিশ্চিত করুন";
+          const cancelButton = document.createElement("button");
+          cancelButton.className = "status-button status-cancel";
+          cancelButton.type = "button";
+          cancelButton.textContent = "বাতিল করুন";
+          const statusButtons = document.createElement("div");
+          statusButtons.className = "status-buttons";
+          statusButtons.append(confirmButton, cancelButton);
+          const feedback = document.createElement("div");
+          feedback.className = "status-feedback";
+          feedback.setAttribute("role", "status");
+          feedback.setAttribute("aria-live", "polite");
+          const controls = [status, confirmButton, cancelButton];
+          confirmButton.addEventListener("click", () => {
+            void updateOrderStatus(order, "নিশ্চিত", status, controls, feedback);
           });
-          actions.append(total, status);
+          cancelButton.addEventListener("click", () => {
+            if (!window.confirm(`${order.name} — এই অর্ডারটি বাতিল করবেন?`)) return;
+            void updateOrderStatus(order, "বাতিল", status, controls, feedback);
+          });
+          status.addEventListener("change", () => {
+            void updateOrderStatus(order, status.value, status, controls, feedback);
+          });
+          actions.append(total, status, statusButtons, feedback);
           card.append(main, actions);
           ordersElement.append(card);
         }
