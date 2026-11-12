@@ -1,0 +1,6 @@
+App_Data/orders.json
+App_Data/orders.json.tmp
+dist/
+node_modules/
+.dev.vars
+.wrangler/

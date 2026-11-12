@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#214d36">
+  <title>অর্ডার ম্যানেজমেন্ট — খেজুর ঘর</title>
+  <style>
+    :root { color-scheme: light; --green:#214d36; --deep:#173b29; --cream:#f6f7f2; --ink:#202a23; --muted:#6b756d; --line:#e4e8e1; --red:#9b3b32; font-family:"Noto Sans Bengali","Hind Siliguri","SolaimanLipi",sans-serif; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:var(--cream); line-height:1.55; }
+    button,input,select { font:inherit; }
+    a { color:inherit; }
+    .top { color:#fff; background:var(--deep); }
+    .top-inner { width:min(1100px,calc(100% - 32px)); min-height:68px; display:flex; align-items:center; justify-content:space-between; gap:16px; margin:auto; }
+    .brand { display:flex; align-items:center; gap:10px; font-size:1.1rem; font-weight:900; }
+    .brand-mark { width:34px; height:34px; display:grid; place-items:center; border-radius:11px; color:var(--deep); background:#e9bb63; }
+    .top-links { display:flex; align-items:center; gap:16px; font-size:.86rem; }
+    .top-links a { color:#e7eee8; }
+    .top-links button { border:1px solid rgba(255,255,255,.35); border-radius:9px; padding:7px 12px; color:#fff; background:transparent; cursor:pointer; }
+    main { width:min(1100px,calc(100% - 32px)); margin:38px auto 70px; }
+    .heading { display:flex; align-items:flex-end; justify-content:space-between; gap:20px; margin-bottom:22px; }
+    .eyebrow { color:var(--green); font-size:.82rem; font-weight:850; }
+    h1 { margin:4px 0 0; color:var(--deep); font-size:clamp(1.7rem,4vw,2.4rem); line-height:1.25; }
+    .heading p { margin:7px 0 0; color:var(--muted); font-size:.9rem; }
+    .button { min-height:43px; border:0; border-radius:10px; padding:0 15px; color:#fff; background:var(--green); font-weight:800; cursor:pointer; }
+    .button:hover { background:var(--deep); }
+    .button:disabled { opacity:.65; cursor:wait; }
+    .panel { padding:24px; border:1px solid var(--line); border-radius:18px; background:#fff; box-shadow:0 8px 26px rgba(32,55,36,.05); }
+    .login { width:min(460px,100%); margin:42px auto; }
+    .login h2 { margin:0 0 4px; font-size:1.35rem; }
+    .login p { margin:0 0 20px; color:var(--muted); font-size:.88rem; }
+    .field { display:grid; gap:6px; margin-bottom:14px; }
+    .field label { font-size:.87rem; font-weight:750; }
+    .field input, .search { width:100%; min-height:45px; border:1px solid #dfe4dc; border-radius:10px; padding:9px 12px; outline:0; background:#fff; }
+    .field input:focus, .search:focus { border-color:#74957c; box-shadow:0 0 0 3px rgba(33,77,54,.1); }
+    .message { display:none; margin:13px 0 0; padding:11px 12px; border-radius:9px; color:#8a332b; background:#fff0ed; font-size:.84rem; }
+    .message.show { display:block; }
+    .toolbar { display:flex; align-items:center; gap:13px; margin:0 0 18px; }
+    .search { max-width:440px; }
+    .count { margin-left:auto; color:var(--muted); font-size:.88rem; }
+    .orders { display:grid; gap:13px; }
+    .order { display:grid; grid-template-columns:1fr auto; gap:12px 20px; padding:19px; border:1px solid var(--line); border-radius:15px; background:#fff; box-shadow:0 4px 18px rgba(32,55,36,.035); }
+    .order-main { min-width:0; }
+    .order-head { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; }
+    .order-head h2 { margin:0; color:var(--deep); font-size:1.05rem; }
+    .order-id { color:#81887f; font: .74rem Consolas,monospace; overflow-wrap:anywhere; }
+    .order-date { margin-top:3px; color:var(--muted); font-size:.78rem; }
+    .order-details { display:grid; grid-template-columns:1fr 1fr; gap:5px 18px; margin:13px 0 0; color:#515c53; font-size:.85rem; }
+    .order-details strong { color:#323e35; }
+    .address { grid-column:1/-1; overflow-wrap:anywhere; }
+    .order-actions { min-width:155px; display:flex; flex-direction:column; align-items:stretch; gap:8px; }
+    .total { color:var(--green); font-size:1.16rem; font-weight:900; text-align:right; }
+    .status { min-height:40px; border:1px solid #dfe4dc; border-radius:9px; padding:7px 9px; color:var(--ink); background:#fff; }
+    .empty { padding:36px 15px; border:1px dashed #cfd8ce; border-radius:15px; color:var(--muted); text-align:center; }
+    .error-page { max-width:600px; margin:45px auto; text-align:center; }
+    [hidden] { display:none !important; }
+    @media(max-width:650px) {
+      .top-inner { min-height:62px; }
+      .top-links { gap:10px; font-size:.78rem; }
+      main { margin-top:27px; }
+      .heading { align-items:flex-start; flex-direction:column; }
+      .panel { padding:20px 16px; }
+      .toolbar { align-items:stretch; flex-wrap:wrap; }
+      .search { max-width:none; }
+      .count { width:100%; margin:0; }
+      .order { grid-template-columns:1fr; }
+      .order-details { grid-template-columns:1fr; }
+      .address { grid-column:auto; }
+      .order-actions { display:grid; grid-template-columns:1fr 1.2fr; align-items:center; }
+      .total { text-align:left; }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="top-inner">
+      <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">খ</span><span>খেজুর ঘর</span></a>
+      <nav class="top-links" aria-label="অ্যাডমিন নেভিগেশন">
+        <a href="/">ওয়েবসাইট দেখুন</a>
+        <button id="logout" type="button" hidden>লগ আউট</button>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <section class="login panel" id="login-panel">
+      <span class="eyebrow">শুধু অ্যাডমিনের জন্য</span>
+      <h2>অর্ডার ম্যানেজমেন্টে প্রবেশ করুন</h2>
+      <p>সার্ভার চালুর সময় নির্ধারিত অ্যাডমিন ইউজারনেম ও পাসওয়ার্ড দিন।</p>
+      <form id="login-form">
+        <div class="field"><label for="username">ইউজারনেম</label><input id="username" name="username" autocomplete="username" required></div>
+        <div class="field"><label for="password">পাসওয়ার্ড</label><input id="password" name="password" type="password" autocomplete="current-password" required></div>
+        <button class="button" id="login-button" type="submit">অর্ডার দেখুন</button>
+      </form>
+      <div class="message" id="login-message" role="alert"></div>
+    </section>
+
+    <section id="orders-panel" hidden>
+      <div class="heading">
+        <div><span class="eyebrow">অর্ডার ইনবক্স</span><h1>গ্রাহকের অর্ডার</h1><p>নতুন অর্ডারগুলো এখানে আসবে। প্রয়োজনে status পরিবর্তন করুন।</p></div>
+        <button class="button" id="refresh" type="button">রিফ্রেশ</button>
+      </div>
+      <div class="toolbar">
+        <input class="search" id="search" type="search" placeholder="নাম, ফোন বা অর্ডার নম্বর দিয়ে খুঁজুন" aria-label="অর্ডার খুঁজুন">
+        <span class="count" id="count"></span>
+      </div>
+      <div class="orders" id="orders" aria-live="polite"></div>
+      <div class="message" id="orders-message" role="alert"></div>
+    </section>
+  </main>
+  <script>
+    (() => {
+      const loginForm = document.getElementById("login-form");
+      const loginMessage = document.getElementById("login-message");
+      const ordersMessage = document.getElementById("orders-message");
+      const loginPanel = document.getElementById("login-panel");
+      const ordersPanel = document.getElementById("orders-panel");
+      const ordersElement = document.getElementById("orders");
+      const searchInput = document.getElementById("search");
+      const logoutButton = document.getElementById("logout");
+      const statuses = ["নতুন", "নিশ্চিত", "প্রস্তুত", "পাঠানো হয়েছে", "সম্পন্ন", "বাতিল"];
+      let authorization = "";
+      let allOrders = [];
+
+      function showMessage(element, text) {
+        element.textContent = text;
+        element.classList.add("show");
+      }
+
+      async function request(url, options) {
+        const response = await fetch(url, {
+          ...options,
+          headers: { ...(options && options.headers), Authorization: authorization }
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "অনুরোধটি সম্পন্ন হয়নি।");
+        return result;
+      }
+
+      async function loadOrders() {
+        ordersMessage.classList.remove("show");
+        const result = await request("/api/admin/orders", { method: "GET" });
+        allOrders = result.orders;
+        renderOrders();
+      }
+
+      function formatPrice(amount) {
+        return `৳ ${new Intl.NumberFormat("bn-BD").format(amount)}`;
+      }
+
+      function formatDate(value) {
+        return new Intl.DateTimeFormat("bn-BD", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+      }
+
+      function addDetail(parent, label, value, className) {
+        const line = document.createElement("div");
+        if (className) line.className = className;
+        const labelElement = document.createElement("strong");
+        labelElement.textContent = `${label}: `;
+        const valueElement = document.createElement("span");
+        valueElement.textContent = value;
+        line.append(labelElement, valueElement);
+        parent.append(line);
+      }
+
+      function renderOrders() {
+        const query = searchInput.value.trim().toLocaleLowerCase();
+        const visibleOrders = allOrders.filter(order =>
+          `${order.name} ${order.phone} ${order.id}`.toLocaleLowerCase().includes(query)
+        );
+        document.getElementById("count").textContent = `${new Intl.NumberFormat("bn-BD").format(visibleOrders.length)}টি অর্ডার`;
+        ordersElement.replaceChildren();
+
+        if (!visibleOrders.length) {
+          const empty = document.createElement("div");
+          empty.className = "empty";
+          empty.textContent = allOrders.length ? "এই খোঁজে কোনো অর্ডার পাওয়া যায়নি।" : "এখনো কোনো অর্ডার আসেনি।";
+          ordersElement.append(empty);
+          return;
+        }
+
+        for (const order of visibleOrders) {
+          const card = document.createElement("article");
+          card.className = "order";
+          const main = document.createElement("div");
+          main.className = "order-main";
+          const head = document.createElement("div");
+          head.className = "order-head";
+          const name = document.createElement("h2");
+          name.textContent = order.name;
+          const id = document.createElement("span");
+          id.className = "order-id";
+          id.textContent = `#${order.id}`;
+          head.append(name, id);
+          const date = document.createElement("div");
+          date.className = "order-date";
+          date.textContent = formatDate(order.createdAt);
+          const details = document.createElement("div");
+          details.className = "order-details";
+          addDetail(details, "ফোন", order.phone);
+          addDetail(details, "পণ্য", `${order.productName} · ${order.weight} × ${new Intl.NumberFormat("bn-BD").format(order.quantity)}`);
+          addDetail(details, "ডেলিভারি", `${order.delivery === "inside" ? "ঢাকার ভেতরে" : "ঢাকার বাইরে"} · ${formatPrice(order.deliveryCharge)}`);
+          if (order.addon) addDetail(details, "অতিরিক্ত", "বাদাম মিক্স · ২০০ গ্রাম · ৳ ১৯০");
+          addDetail(details, "ঠিকানা", `${order.district}, ${order.address}`, "address");
+          main.append(head, date, details);
+
+          const actions = document.createElement("div");
+          actions.className = "order-actions";
+          const total = document.createElement("strong");
+          total.className = "total";
+          total.textContent = formatPrice(order.total);
+          const status = document.createElement("select");
+          status.className = "status";
+          status.setAttribute("aria-label", `${order.name} — অর্ডার status`);
+          for (const value of statuses) {
+            const option = document.createElement("option");
+            option.value = value;
+            option.textContent = value;
+            option.selected = value === order.status;
+            status.append(option);
+          }
+          status.addEventListener("change", async () => {
+            const previous = order.status;
+            status.disabled = true;
+            try {
+              await request(`/api/admin/orders/${encodeURIComponent(order.id)}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: status.value })
+              });
+              order.status = status.value;
+            } catch (error) {
+              status.value = previous;
+              showMessage(ordersMessage, error.message);
+            } finally {
+              status.disabled = false;
+            }
+          });
+          actions.append(total, status);
+          card.append(main, actions);
+          ordersElement.append(card);
+        }
+      }
+
+      loginForm.addEventListener("submit", async event => {
+        event.preventDefault();
+        loginMessage.classList.remove("show");
+        const button = document.getElementById("login-button");
+        button.disabled = true;
+        const credentials = `${document.getElementById("username").value}:${document.getElementById("password").value}`;
+        const bytes = new TextEncoder().encode(credentials);
+        let binary = "";
+        for (const byte of bytes) binary += String.fromCharCode(byte);
+        authorization = `Basic ${btoa(binary)}`;
+        try {
+          await loadOrders();
+          loginPanel.hidden = true;
+          ordersPanel.hidden = false;
+          logoutButton.hidden = false;
+          document.getElementById("password").value = "";
+        } catch (error) {
+          authorization = "";
+          showMessage(loginMessage, error.message);
+        } finally {
+          button.disabled = false;
+        }
+      });
+
+      document.getElementById("refresh").addEventListener("click", async event => {
+        const button = event.currentTarget;
+        button.disabled = true;
+        try {
+          await loadOrders();
+        } catch (error) {
+          showMessage(ordersMessage, error.message);
+        } finally {
+          button.disabled = false;
+        }
+      });
+
+      searchInput.addEventListener("input", renderOrders);
+      logoutButton.addEventListener("click", () => {
+        authorization = "";
+        allOrders = [];
+        ordersPanel.hidden = true;
+        logoutButton.hidden = true;
+        loginPanel.hidden = false;
+        loginForm.reset();
+        loginMessage.classList.remove("show");
+      });
+    })();
+  </script>
+</body>
+</html>
